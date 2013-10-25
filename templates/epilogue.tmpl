@@ -1,1 +1,8 @@
-the epilogue
+ADD http://configs.static.triforce.io/configs-base-0.0.1.tar.gz /configs.tar.gz
+RUN tar -xvzf /configs.tar.gz && chown -R dev /home/dev && chgrp -R dev /home/dev
+
+EXPOSE 22
+
+ENTRYPOINT ["/usr/bin/sshd"]
+
+CMD ["-D"]

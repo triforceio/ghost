@@ -1,1 +1,6 @@
-the prelude
+FROM schmidh/arch-base
+MAINTAINER Joe Fiorini <joe@joefiorini.com>
+
+RUN cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup && cp /etc/pacman.d/mirrorlist.pacnew /etc/pacman.d/mirrorlist && sed '/^#\S/ s|#||' -i /etc/pacman.d/mirrorlist
+RUN pacman -S --noconfirm reflector
+RUN reflector --verbose -l 5 --sort rate --save /etc/pacman.d/mirrorlist && pacman -Syy
