@@ -3,14 +3,16 @@ package main
 import (
   "flag"
   "fmt"
+  "strings"
 )
 
 func main() {
   flag.Parse()
   args := flag.Args()
+  packages := strings.Split(args[0], ",")
   formatted := FmtName(args[0])
-  fmt.Println("SHA: %s", formatted)
   dockerfile := new(Dockerfile)
-  MakeDockerfile([]string{"blah"}, dockerfile)
+  fmt.Println("SHA: %s", formatted)
+  MakeDockerfile(packages, dockerfile)
   fmt.Println("Contents: ", dockerfile.Contents())
 }

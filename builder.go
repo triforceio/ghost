@@ -5,6 +5,7 @@ import (
   "fmt"
   "text/template"
   "io/ioutil"
+  "os"
 )
 
 type FileGenerator interface {
@@ -22,7 +23,7 @@ type Dockerfile struct {
 func ParsedSnippet(path string) string {
   text := new(bytes.Buffer)
   t := template.New("prelude")
-  contents,err := ioutil.ReadFile("templates/prelude.tmpl")
+  contents,err := ioutil.ReadFile(path)
   if err != nil {
     fmt.Println(err)
   }
@@ -31,20 +32,34 @@ func ParsedSnippet(path string) string {
   return text.String()
 }
 
+func FileExists(path string) bool {
+  if _, err := os.Stat(path); err != nil {
+    if os.IsNotExist(err) {
+      return false
+    }
+  }
+  return true
+}
+
 func (d Dockerfile) ReadPrelude() string {
   return ParsedSnippet("templates/prelude.tmpl")
 }
 
 func (d Dockerfile) ReadEpilogue() string {
-  return ""
+  return ParsedSnippet("templates/epilogue.tmpl")
 }
 
 func (d Dockerfile) ReadExtras(packageName string) string {
+  path := "templates/extras/" + packageName + ".tmpl"
+
+  if FileExists(path) {
+    return ParsedSnippet(path)
+  }
   return ""
 }
 
 func (d Dockerfile) ReadBase() string {
-  return ""
+  return ParsedSnippet("templates/base.tmpl")
 }
 
 func (d *Dockerfile) Write(template string) (ret int,err error) {
