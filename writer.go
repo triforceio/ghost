@@ -3,9 +3,14 @@ package main
 import (
   "launchpad.net/goamz/aws"
   "launchpad.net/goamz/s3"
+  "mime"
+  "io"
+  "bytes"
 )
 
-func WriteDockerfile(contents []byte, name string) (string, error) {
+func WriteDockerfile(contents io.Reader, name string) (string, error) {
+  mime.AddExtensionType(".tar", "application/x-tar")
+  var bytes bytes.Buffer
   auth, err := aws.EnvAuth()
 
   if err != nil {
@@ -14,8 +19,10 @@ func WriteDockerfile(contents []byte, name string) (string, error) {
 
   client := s3.New(auth, aws.USEast)
   bucket := client.Bucket("images.static.triforce.io")
-  filename := "Dockerfile-" + name
-  putErr := bucket.Put(filename, contents, "text/plain", s3.PublicRead)
+  filename := name + ".tar"
+  contentType := mime.TypeByExtension(".tar")
+  bytes.ReadFrom(contents)
+  putErr := bucket.Put(filename, bytes.Bytes(), contentType, s3.PublicRead)
 
   if putErr != nil {
     return "", putErr

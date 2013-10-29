@@ -4,7 +4,33 @@ import (
   "flag"
   "fmt"
   "strings"
+  "bytes"
+  "archive/tar"
+  "io"
 )
+
+type Archive io.Reader
+
+func PackageFile(content string) (Archive, error) {
+  buf := new(bytes.Buffer)
+  tw := tar.NewWriter(buf)
+
+  hdr := &tar.Header{
+    Name: "Dockerfile",
+    Size: int64(len(content)),
+  }
+  if err := tw.WriteHeader(hdr); err != nil {
+    return nil, err
+  }
+  if _, err := tw.Write([]byte(content)); err != nil {
+    return nil, err
+  }
+
+  if err := tw.Close(); err != nil {
+    return nil, err
+  }
+  return buf, nil
+}
 
 func main() {
   flag.Parse()
@@ -14,8 +40,14 @@ func main() {
   dockerfile := new(Dockerfile)
   fmt.Println("SHA: %s", formatted)
   MakeDockerfile(packages, dockerfile)
+  archive, err := PackageFile(dockerfile.Contents())
+
+  if err != nil {
+    fmt.Println("Error compressing file: ", err);
+  }
+
   fmt.Println("writing Dockerfile to S3 bucket...")
-  url, err := WriteDockerfile([]byte(dockerfile.Contents()), formatted)
+  url, err := WriteDockerfile(archive, formatted)
 
   if url != "" {
     fmt.Println(url)
