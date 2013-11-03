@@ -18,6 +18,7 @@ func PackageFile(content string) (Archive, error) {
   hdr := &tar.Header{
     Name: "Dockerfile",
     Size: int64(len(content)),
+    Typeflag: tar.TypeReg,
   }
   if err := tw.WriteHeader(hdr); err != nil {
     return nil, err
@@ -54,4 +55,7 @@ func main() {
   } else {
     fmt.Println("Error writing Dockerfile: ", err)
   }
+
+  client := Client{"172.17.42.1:4243", "1.6"}
+  client.BuildImage(archive)
 }
